@@ -88,7 +88,7 @@ if __name__=='__main__':
     map=hp.read_map(fitsfile,h=False,verbose=opts.verbose)
     found=check_ci(map,clusters,ci=opts.credible_interval,verbose=opts.verbose)
     
-    print('The following clusters were found inside the 90% c.i.')
+    print('The following clusters were found inside the {:.0f}% c.i.'.format(100*float(opts.credible_interval)))
     for n,c,_,P in found:
         print('{0}:\t{1}\tp={2}'.format(n,c.to_string('hmsdms'),P))
     

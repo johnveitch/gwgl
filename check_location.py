@@ -57,13 +57,15 @@ def check_ci(skymap,clusters,ci=0.9,verbose=False):
     skycoords = SkyCoord(ra=ras*u.radian,dec=decs*u.radian,frame='icrs')
     
     found = []
+    pixsize = hp.nside2pixarea(nside,degrees=True)
  
     for name,c in clusters:
         idx, d2d, d3d = c.match_to_catalog_sky(skycoords)
     
         n=idxlist.index(idx)
         P=Ps[n]
-        if P<ci: found.append((name,c,skycoords[idx],P))
+        if P<ci:
+	  found.append((name,c,skycoords[idx],P,n*pixsize))
         if verbose: print('Cluster {0} found at P {1}'.format(name,P))
         
     return found
@@ -89,7 +91,7 @@ if __name__=='__main__':
     found=check_ci(map,clusters,ci=opts.credible_interval,verbose=opts.verbose)
     
     print('The following clusters were found inside the {:.0f}% c.i.'.format(100*float(opts.credible_interval)))
-    for n,c,_,P in found:
-        print('{0}:\t{1}\tp={2}'.format(n,c.to_string('hmsdms'),P))
+    for n,c,_,P,A in found:
+        print('{0}:\t{1}\tp={2:.3f} Area={3:.2f} sq. deg.'.format(n,c.to_string('hmsdms'),P,A))
     
 

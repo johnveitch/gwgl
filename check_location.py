@@ -28,15 +28,15 @@ import sys
 def load_lenses(file):
     """
     Read in the list of lenses from a file formatted like this:
-    ABELL2744            00 14 18.9 -30 23 22
+    ABELL2744            00 14 18.9 -30 23 22  REDSHIFT
     """
     clusters=[]
     for line in file:
-        name, ra_h,ra_m,ra_s, dec_deg,dec_m,dec_s = line.split()
+        name, ra_h,ra_m,ra_s, dec_deg,dec_m,dec_s, redshift = line.split()
         c = SkyCoord('{0}h{1}m{2}s'.format(ra_h,ra_m,ra_s),
                      '{0}d{1}m{2}s'.format(dec_deg,dec_m,dec_s),
                      frame='icrs')
-        clusters.append((name,c))
+        clusters.append((name,c,float(redshift)))
     return clusters
 
 
@@ -59,13 +59,13 @@ def check_ci(skymap,clusters,ci=0.9,verbose=False):
     found = []
     pixsize = hp.nside2pixarea(nside,degrees=True)
  
-    for name,c in clusters:
+    for name,c,redshift in clusters:
         idx, d2d, d3d = c.match_to_catalog_sky(skycoords)
     
         n=idxlist.index(idx)
         P=Ps[n]
         if P<ci:
-	  found.append((name,c,skycoords[idx],P,n*pixsize))
+	  found.append((name,c,skycoords[idx],P,n*pixsize,redshift))
         if verbose: print('Cluster {0} found at P {1}'.format(name,P))
         
     return found
@@ -76,7 +76,7 @@ Find lenses within the sky map"""
 if __name__=='__main__':
     
     parser=OptionParser(usage)
-    parser.add_option('-l','--lens-file',default='strong-lensing-clusters-20170414.txt',help='File with clusters')
+    parser.add_option('-l','--lens-file',default='strong-lensing-clusters.txt',help='File with clusters')
     parser.add_option('-P','--credible-interval',default=0.9,type=float,metavar='P',help='Credible interval to search within')
     parser.add_option('-v','--verbose',default=False,action='store_true')
     (opts,args)=parser.parse_args()
@@ -91,7 +91,7 @@ if __name__=='__main__':
     found=check_ci(map,clusters,ci=opts.credible_interval,verbose=opts.verbose)
     
     print('The following clusters were found inside the {:.0f}% c.i.'.format(100*float(opts.credible_interval)))
-    for n,c,_,P,A in found:
-        print('{0}:\t{1}\tp={2:.3f} Area={3:.2f} sq. deg.'.format(n,c.to_string('hmsdms'),P,A))
+    for n,c,_,P,A,z in found:
+        print('{0} (z={4:.2f}):\t{1}\tp={2:.3f}\tArea={3:.2f} sq. deg.'.format(n,c.to_string('hmsdms'),P,A,z))
     
 

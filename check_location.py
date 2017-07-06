@@ -32,11 +32,11 @@ def load_lenses(file):
     """
     clusters=[]
     for line in file:
-        name, ra_h,ra_m,ra_s, dec_deg,dec_m,dec_s, redshift = line.split()
+        name, ra_h,ra_m,ra_s, dec_deg,dec_m,dec_s, redshift, einstein_radius = line.split()
         c = SkyCoord('{0}h{1}m{2}s'.format(ra_h,ra_m,ra_s),
                      '{0}d{1}m{2}s'.format(dec_deg,dec_m,dec_s),
                      frame='icrs')
-        clusters.append((name,c,float(redshift)))
+        clusters.append((name,c,float(redshift),einstein_radius))
     return clusters
 
 
@@ -59,13 +59,13 @@ def check_ci(skymap,clusters,ci=0.9,verbose=False):
     found = []
     pixsize = hp.nside2pixarea(nside,degrees=True)
  
-    for name,c,redshift in clusters:
+    for name,c,redshift,ER in clusters:
         idx, d2d, d3d = c.match_to_catalog_sky(skycoords)
     
         n=idxlist.index(idx)
         P=Ps[n]
         if P<ci:
-	  found.append((name,c,skycoords[idx],P,n*pixsize,redshift))
+	  found.append((name,c,skycoords[idx],P,n*pixsize,redshift,ER))
         if verbose: print('Cluster {0} found at P {1}'.format(name,P))
         
     return found
@@ -91,7 +91,7 @@ if __name__=='__main__':
     found=check_ci(map,clusters,ci=opts.credible_interval,verbose=opts.verbose)
     
     print('The following clusters were found inside the {:.0f}% c.i.'.format(100*float(opts.credible_interval)))
-    for n,c,_,P,A,z in found:
-        print('{0} (z={4:.2f}):\t{1}\tp={2:.3f}\tArea={3:.2f} sq. deg.'.format(n,c.to_string('hmsdms'),P,A,z))
+    for n,c,_,P,A,z,ER in found:
+        print('{0} (z={4:.2f} Einstein radius: {5}"):\t{1}\tp={2:.3f}\tArea={3:.2f} sq. deg.'.format(n,c.to_string('hmsdms'),P,A,z,ER))
     
 
